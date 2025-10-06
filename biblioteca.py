@@ -1,21 +1,81 @@
 def carica_da_file(file_path):
     """Carica i libri dal file"""
-    # TODO
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"Errore: File non trovato al percorso: {file_path}")
+
+    biblioteca = {}
+
+    with open(file_path, 'r', newline='', encoding='utf-8') as file:
+        reader = csv.reader(file)
+
+        try:
+            num_sezioni = int(next(reader)[0])
+            for i in range(1, num_sezioni + 1):
+                biblioteca[i] = []
+        except (StopIteration, ValueError, IndexError):
+            print("Errore: Formato errato nella prima riga del file CSV.")
+            return None
+
+        for riga in reader:
+            if len(riga) == 5:
+                try:
+                    titolo, autore, anno, pagine, sezione = riga
+                    sezione_int = int(sezione)
+                    if sezione_int in biblioteca:
+                        libro = Libro(titolo, autore, anno, pagine, sezione_int)
+                        biblioteca[sezione_int].append(libro)
+                except ValueError:
+                    pass
+
+    print(f"Biblioteca caricata con successo.")
+    return biblioteca
 
 
 def aggiungi_libro(biblioteca, titolo, autore, anno, pagine, sezione, file_path):
     """Aggiunge un libro nella biblioteca"""
-    # TODO
+
+    if sezione not in biblioteca:
+            print(f"Errore: La sezione {sezione} non esiste.")
+            return None
+
+    for sezione_libri in biblioteca.values():
+            for libro in sezione_libri:
+                if libro.titolo.lower() == titolo.strip().lower():
+                    print(f"Errore: Il libro '{titolo}' è già presente.")
+                    return None
+
+    nuovo_libro = Libro(titolo, autore, anno, pagine, sezione)
+    biblioteca[sezione].append(nuovo_libro)
+
+    try:
+        with open(file_path, 'a', newline='', encoding='utf-8') as file:
+            file.write('\n' + nuovo_libro.to_csv_row())
+        return nuovo_libro
+    except Exception as e:
+        print(f"Errore durante l'aggiornamento del file CSV: {e}")
+        biblioteca[sezione].pop()
+        return None
 
 
 def cerca_libro(biblioteca, titolo):
     """Cerca un libro nella biblioteca dato il titolo"""
-    # TODO
+    titolo_cercato = titolo.strip().lower()
+
+    for sezione_libri in biblioteca.values():
+        for libro in sezione_libri:
+            if libro.titolo.lower() == titolo_cercato:
+                return str(libro)
+
+    return None
 
 
 def elenco_libri_sezione_per_titolo(biblioteca, sezione):
     """Ordina i titoli di una data sezione della biblioteca in ordine alfabetico"""
-    # TODO
+    if sezione not in biblioteca:
+        return None
+
+    titoli = [libro.titolo for libro in biblioteca[sezione]]
+    return sorted(titoli)
 
 
 def main():
